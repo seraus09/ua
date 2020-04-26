@@ -89,6 +89,6 @@ def result():
     else:
         print("OK" ,received,"Mb/s incoming traffic",sender,"Mb/s outcoming traffic")
         sys.exit(0)
-
-result()
+if __name__ == '__main__':
+    result()
 
