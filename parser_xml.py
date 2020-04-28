@@ -10,10 +10,10 @@ def reg():
         cost = price.get('YourAdditonalCost')
         if cost is None:
             g = str(cost).replace('None', '0')
-            res = (f"Цена {name.get('Name')}: REG Период - {price.get('DurationType')}, Цена - {float(price.get('YourPrice') + g)}")
+            res = (f"Zone {name.get('Name')}: REG Duration - {price.get('DurationType')}, Price - {float(price.get('YourPrice') + g)}")
             lis.append(res)
         else:
-            res = (f"Цена {name.get('Name')}: REG Период - {price.get('DurationType')}, Цена - {float(price.get('YourPrice')) + float(price.get('YourAdditonalCost'))}")
+            res = (f"Zone {name.get('Name')}: REG Duration - {price.get('DurationType')}, Price - {float(price.get('YourPrice')) + float(price.get('YourAdditonalCost'))}")
             lis.append(res)
 
         result = '\n'.join(lis)
