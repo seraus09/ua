@@ -40,6 +40,8 @@ def softwareDetected():
     for i in raid:
         if mds.config(i) != "UU":
             return False
+     else:
+        return True
 
 def find_disks():
     disks = list()
