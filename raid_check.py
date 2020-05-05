@@ -93,8 +93,8 @@ def check_device_health():
            status = str(res)
            if "PASSED" not in status:
                return False
-           else:
-               return True
+       else:
+           return True
     elif diskCount() == 4:
          for i in range(0,4):
              cmd = '''sudo smartctl -a -d cciss,{0} /dev/sda | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(i)
@@ -103,8 +103,8 @@ def check_device_health():
              status = str(res)
              if "PASSED" not in status:
                  return False
-             else:
-                 return True 
+         else:
+             return True 
 
 
 
