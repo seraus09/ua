@@ -28,7 +28,7 @@ def checkSsacli():
            retcode = ssacli.returncode
            return True
         else:
-            return "Raid not found"
+            return False
     except:
         return False
 
@@ -36,14 +36,17 @@ def checkSsacli():
 def softwareDetected():
 #Detected software raid and check it
     mds = MdStat()
-    raid = mds.arrays()
+    raid = mds.arrays() #Get all arrays
     for i in raid:
-        if mds.config(i) != "UU":
+        if mds.config(i) == "chunks":
+            continue
+        elif mds.config(i) != "UU":
             return False
-     else:
+    else:
         return True
 
 def find_disks():
+#Find all disk in a system
     disks = list()
     for dev in sorted(os.listdir('/sys/block')):
         try:
@@ -60,13 +63,17 @@ def check_soft_disks():
     disks = find_disks()
     for d in disks:
         cmd = '''sudo smartctl -H {0} | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(d)
-        data = os.popen(cmd).read()  
+        data = os.popen(cmd).read()
         res = data.splitlines()
         status = str(res)
+        command = "smartctl -l error {0} |grep 'ATA Error Count'| cut -f2 -d:".format(d)
+        results = os.popen(command).read()
         if "PASSED" not in status:
             return False
-        else:
-            return True
+        if results != '':
+           return False 
+    else:
+        return True
 
 
 
@@ -80,31 +87,39 @@ def diskCount():
         result = re.findall(regex,string )
         return len(result)
     except:
-        return f" \033[31m  No such file or directory 'ssacli', Was ssacli installed?"
+        return "No such file or directory 'ssacli', Was ssacli installed?"
 
 
 def check_device_health():
-# Check check_device_health hardware raid 
+# Check check_device_health hardware raid
     if diskCount() == 2:
        for i in range(0,2):
            cmd = '''sudo smartctl -a -d cciss,{0} /dev/sda | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(i)
-           data = os.popen(cmd).read() 
+           data = os.popen(cmd).read()
            res = data.splitlines()
            status = str(res)
+           command = "smartctl a -d cciss,{0} -l error |grep 'ATA Error Count'| cut -f2 -d:".format(i)
+           results = os.popen(command).read()
            if "PASSED" not in status:
+               return False
+           if results != '':
                return False
        else:
            return True
     elif diskCount() == 4:
          for i in range(0,4):
              cmd = '''sudo smartctl -a -d cciss,{0} /dev/sda | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(i)
-             data = os.popen(cmd).read() 
+             data = os.popen(cmd).read()
              res = data.splitlines()
              status = str(res)
+             command = "smartctl a -d cciss,{0} -l error |grep 'ATA Error Count'| cut -f2 -d:".format(i)
+             results = os.popen(command).read()
              if "PASSED" not in status:
                  return False
+             if results != '':
+                 return False
          else:
-             return True 
+             return True
 
 
 
@@ -116,9 +131,8 @@ def checkRaid():
            output = run_hpacucli.communicate()
            result = str(output).replace('None', '').replace('b', '').strip('()')
            if "Failed" in result:
-               print ("RAID Error")
+               return "RAID Error"
                return 0
-               
            elif check_device_health():
                print ("Hardware RAID and DISKS are  OK ")
                return 0
@@ -135,40 +149,15 @@ def checkRaid():
                 return 0
             else:
                 print('DISK failed')
-                return 2 
+                return 2
         else:
-            print ("RAID ERROR")
-            return 2
+            print("RAID ERROR")
+            return 0
     except:
-        return f"\033[31m  No such file or directory 'ssacli', Was ssacli installed?"
+        return "Error No such file or directory 'ssacli', Was ssacli installed?"
 
 
 
 if __name__ == '__main__':
     sys.exit(checkRaid())
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
