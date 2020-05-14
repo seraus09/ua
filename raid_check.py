@@ -66,8 +66,12 @@ def check_soft_disks():
         data = os.popen(cmd).read()
         res = data.splitlines()
         status = str(res)
+        command = "smartctl -l error {0} |grep 'ATA Error Count'| cut -f2 -d:".format(d)
+        results = os.popen(command).read()
         if "PASSED" not in status:
             return False
+        if results != '':
+           return False 
     else:
         return True
 
@@ -94,7 +98,11 @@ def check_device_health():
            data = os.popen(cmd).read()
            res = data.splitlines()
            status = str(res)
+           command = "smartctl a -d cciss,{0} -l error |grep 'ATA Error Count'| cut -f2 -d:".format(i)
+           results = os.popen(command).read()
            if "PASSED" not in status:
+               return False
+           if results != '':
                return False
        else:
            return True
@@ -104,7 +112,11 @@ def check_device_health():
              data = os.popen(cmd).read()
              res = data.splitlines()
              status = str(res)
+             command = "smartctl a -d cciss,{0} -l error |grep 'ATA Error Count'| cut -f2 -d:".format(i)
+             results = os.popen(command).read()
              if "PASSED" not in status:
+                 return False
+             if results != '':
                  return False
          else:
              return True
@@ -149,4 +161,3 @@ def checkRaid():
 if __name__ == '__main__':
     sys.exit(checkRaid())
 
-    print( find_disks())
