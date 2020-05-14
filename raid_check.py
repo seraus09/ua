@@ -98,7 +98,7 @@ def check_device_health():
            data = os.popen(cmd).read()
            res = data.splitlines()
            status = str(res)
-           command = "smartctl a -d cciss,{0} -l error |grep 'ATA Error Count'| cut -f2 -d:".format(i)
+           command = "smartctl a -d cciss,{0} -l error /dev/sda |grep 'ATA Error Count'| cut -f2 -d:".format(i)
            results = os.popen(command).read()
            if "PASSED" not in status:
                return False
@@ -112,7 +112,7 @@ def check_device_health():
              data = os.popen(cmd).read()
              res = data.splitlines()
              status = str(res)
-             command = "smartctl a -d cciss,{0} -l error |grep 'ATA Error Count'| cut -f2 -d:".format(i)
+             command = "smartctl a -d cciss,{0} -l error /dev/sda |grep 'ATA Error Count'| cut -f2 -d:".format(i)
              results = os.popen(command).read()
              if "PASSED" not in status:
                  return False
