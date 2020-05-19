@@ -71,7 +71,7 @@ def check_soft_disks():
         if "PASSED" not in status:
             return False
         if results != '':
-           return False 
+           return False
     else:
         return True
 
@@ -98,7 +98,8 @@ def check_device_health():
            data = os.popen(cmd).read()
            res = data.splitlines()
            status = str(res)
-           command = "smartctl a -d cciss,{0} -l error /dev/sda |grep 'ATA Error Count'| cut -f2 -d:".format(i)
+           command = "sudo smartctl -a -d cciss,{0}  -l error /dev/sda |grep 'ATA Error Count'| cut -f2 -d:".format(i)
+           global results
            results = os.popen(command).read()
            if "PASSED" not in status:
                return False
@@ -116,7 +117,7 @@ def check_device_health():
              results = os.popen(command).read()
              if "PASSED" not in status:
                  return False
-             if results != '':
+             if  results != '':
                  return False
          else:
              return True
@@ -137,7 +138,7 @@ def checkRaid():
                print ("Hardware RAID and DISKS are  OK ")
                return 0
            else:
-               print('DISK failed')
+               print('DISK failed', results)
                return 2
 
         elif softwareDetected() is None:
@@ -159,5 +160,5 @@ def checkRaid():
 
 
 if __name__ == '__main__':
-    sys.exit(checkRaid())
+     sys.exit(checkRaid())
 
