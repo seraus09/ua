@@ -9,7 +9,7 @@ import re
 def hardwareDetected():
 # Detected hardware raid
     p1 = subprocess.Popen(shlex.split('lspci'),stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(shlex.split('grep -i  RAID'), stdin=p1.stdout,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    p2 = subprocess.Popen(shlex.split('grep -i  RAID bus controller: Hewlett-Packard'), stdin=p1.stdout,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     p1.stdout.close()
     output = p2.communicate()
     retcode = p2.returncode
@@ -48,11 +48,18 @@ def softwareDetected():
 def find_disks():
 #Find all disk in a system
     disks = list()
-    for dev in sorted(os.listdir('/sys/block')):
+    reg = r"\b[n].{6,7}\b"
+    list_disk = sorted(os.listdir('/sys/block'))
+    a = str(list_disk)
+    for i in re.finditer(reg,a):
+        disks.append(i.group(0))
+    for dev in list_disk:
         try:
             with open('/sys/block/{}/device/type'.format(dev)) as f:
                 if f.read().strip() == '0':
                     disks.append('/dev/{}'.format(dev))
+
+
         except:
             continue
 
@@ -69,9 +76,9 @@ def check_soft_disks():
         command = "smartctl -l error {0} |grep 'ATA Error Count'| cut -f2 -d:".format(d)
         results = os.popen(command).read()
         if "PASSED" not in status:
-            return False
+           return False
         if results != '':
-           return False 
+           return False
     else:
         return True
 
@@ -98,7 +105,8 @@ def check_device_health():
            data = os.popen(cmd).read()
            res = data.splitlines()
            status = str(res)
-           command = "smartctl a -d cciss,{0} -l error |grep 'ATA Error Count'| cut -f2 -d:".format(i)
+           command = "sudo smartctl -a -d cciss,{0}  -l error /dev/sda |grep 'ATA Error Count'| cut -f2 -d:".format(i)
+           global results
            results = os.popen(command).read()
            if "PASSED" not in status:
                return False
@@ -112,11 +120,11 @@ def check_device_health():
              data = os.popen(cmd).read()
              res = data.splitlines()
              status = str(res)
-             command = "smartctl a -d cciss,{0} -l error |grep 'ATA Error Count'| cut -f2 -d:".format(i)
+             command = "smartctl a -d cciss,{0} -l error /dev/sda |grep 'ATA Error Count'| cut -f2 -d:".format(i)
              results = os.popen(command).read()
              if "PASSED" not in status:
                  return False
-             if results != '':
+             if  results != '':
                  return False
          else:
              return True
@@ -137,7 +145,7 @@ def checkRaid():
                print ("Hardware RAID and DISKS are  OK ")
                return 0
            else:
-               print('DISK failed')
+               print('DISK failed', results)
                return 2
 
         elif softwareDetected() is None:
@@ -148,7 +156,7 @@ def checkRaid():
                 print("Software RAID and DISKS are OK")
                 return 0
             else:
-                print('DISK failed')
+                print('DISK FAILED')
                 return 2
         else:
             print("RAID ERROR")
@@ -159,5 +167,5 @@ def checkRaid():
 
 
 if __name__ == '__main__':
-    sys.exit(checkRaid())
+     sys.exit(checkRaid())
 
