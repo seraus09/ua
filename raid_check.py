@@ -127,8 +127,8 @@ def checkRaid():
            run_hpacucli  = subprocess.Popen(shlex.split('ssacli ctrl slot=0 pd all show status'),stdout=subprocess.PIPE)
            output = run_hpacucli.communicate()
            result = str(output).replace('None', '').replace('b', '').strip('()')
-           if "Failed" in result:
-               return "RAID Error"
+           if "Fail" in result:
+               return "HARDWARE RAID Error", result
                return 2
            elif check_device_health():
                print ("Hardware RAID and DISKS are  OK ")
@@ -148,7 +148,7 @@ def checkRaid():
                 print('DISK FAILED')
                 return 2
         else:
-            print("RAID ERROR")
+            print("SOFTWARE RAID ERROR")
             return 2
     except:
         return "Error No such file or directory 'ssacli', Was ssacli installed?"
@@ -157,3 +157,4 @@ def checkRaid():
 
 if __name__ == '__main__':
     sys.exit(checkRaid())
+
