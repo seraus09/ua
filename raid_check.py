@@ -145,20 +145,20 @@ def check_device_health():
                return False
        else:
            return True
-    elif diskCount() == 4:
-         for i in range(0,4):
-             cmd = '''sudo smartctl -a -d cciss,{0} /dev/sda | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(i)
-             data = os.popen(cmd).read()
-             res = data.splitlines()
-             status = str(res)
-             command = "smartctl a -d cciss,{0} -l error /dev/sda |grep 'ATA Error Count'| cut -f2 -d:".format(i)
-             results = os.popen(command).read()
-             if "PASSED" not in status:
-                 return False
-             if  results != '':
-                 return False
-         else:
-             return True
+   elif diskCount() == 4:
+       for i in range(0,4):
+           cmd = '''sudo smartctl -a -d cciss,{0} /dev/sda | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(i)
+           data = os.popen(cmd).read()
+           res = data.splitlines()
+           status = str(res)
+           command = "smartctl a -d cciss,{0} -l error /dev/sda |grep 'ATA Error Count'| cut -f2 -d:".format(i)
+           results = os.popen(command).read()
+               if "PASSED" not in status:
+                   return False
+               if  results != '':
+                   return False
+       else:
+           return True
 
 def checkRaid():
 #Check  raid and disk
