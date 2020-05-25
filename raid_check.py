@@ -130,7 +130,7 @@ def check_device_health():
            return False
    else:
        return True
-    if diskCount() == 2:
+   if diskCount() == 2:
        for i in range(0,2):
            cmd = '''sudo smartctl -a -d cciss,{0} /dev/sda | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(i)
            data = os.popen(cmd).read()
