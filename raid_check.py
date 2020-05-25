@@ -9,7 +9,7 @@ import re
 def hardwareDetected():
 # Detected hardware raid
     p1 = subprocess.Popen(shlex.split('lspci'),stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(shlex.split('grep -i  RAID bus controller: Hewlett-Packard'), stdin=p1.stdout,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    p2 = subprocess.Popen(shlex.split("grep -i  'RAID bus controller: Hewlett-Packard'"), stdin=p1.stdout,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     p1.stdout.close()
     output = p2.communicate()
     retcode = p2.returncode
@@ -50,24 +50,27 @@ def find_disks():
     disks = list()
     reg = r"\b[n].{6,7}\b" #regx nmve
     list_disk = sorted(os.listdir('/sys/block'))
-    a = str(list_disk) 
-    for i in re.finditer(reg,a):
-        disks.append(i.group(0))
-    for dev in list_disk:
-        try:
-            with open('/sys/block/{}/device/type'.format(dev)) as f:
-                if f.read().strip() == '0':
-                    disks.append('/dev/{}'.format(dev))
+    a = str(list_disk)
+    if "nvme" in a:
+        for i in re.finditer(reg,a):
+            disks.append('/dev/{}'.format(i.group(0)))
+        return disks
+    else:
+        for dev in list_disk:
+            try:
+                with open('/sys/block/{}/device/type'.format(dev)) as f:
+                    if f.read().strip() == '0':
+                        disks.append('/dev/{}'.format(dev))
 
 
-        except:
-            continue
+            except:
+                continue
 
     return disks
 
 
 def check_soft_disks():
-#check dicks over smartctl 
+#check dicks over smartctl
     disks = find_disks()
     for d in disks:
         cmd = '''sudo smartctl -H {0} | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(d)
@@ -77,7 +80,7 @@ def check_soft_disks():
         command = "smartctl -l error {0} | grep 'ATA Error Count'| cut -f2 -d:".format(d)
         results = os.popen(command).read()
         if "PASSED" not in status:
-           return False
+           return False, disks
         if results != '':
            return False
     else:
@@ -100,7 +103,8 @@ def diskCount():
 
 def check_device_health():
 # Check check_device_health hardware raid
-   for i in diskCount():
+   count = diskCount()
+   for i in range(0,count):
        cmd = '''sudo smartctl -a -d cciss,{0} /dev/sda | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(i)
        data = os.popen(cmd).read()
        res = data.splitlines()
@@ -153,4 +157,3 @@ def checkRaid():
 
 if __name__ == '__main__':
      sys.exit(checkRaid())
-
