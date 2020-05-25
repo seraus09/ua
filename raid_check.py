@@ -129,7 +129,7 @@ def checkRaid():
            result = str(output).replace('None', '').replace('b', '').strip('()')
            if "Failed" in result:
                return "RAID Error"
-               return 0
+               return 2
            elif check_device_health():
                print ("Hardware RAID and DISKS are  OK ")
                return 0
