@@ -10,7 +10,6 @@ def hardwareDetected():
 # Detected hardware raid
     p1 = subprocess.Popen(shlex.split('lspci'),stdout=subprocess.PIPE)
     p2 = subprocess.Popen(shlex.split("grep -i  'RAID bus controller: Hewlett-Packard'"), stdin=p1.stdout,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    p2 = subprocess.Popen(shlex.split('grep -i  RAID'), stdin=p1.stdout,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     p1.stdout.close()
     output = p2.communicate()
     retcode = p2.returncode
@@ -66,13 +65,6 @@ def find_disks():
 
             except:
                 continue
-    for dev in sorted(os.listdir('/sys/block')):
-        try:
-            with open('/sys/block/{}/device/type'.format(dev)) as f:
-                if f.read().strip() == '0':
-                    disks.append('/dev/{}'.format(dev))
-        except:
-            continue
 
     return disks
 
@@ -89,14 +81,10 @@ def check_soft_disks():
         results = os.popen(command).read()
         if "PASSED" not in status:
            return False, disks
-        command = "smartctl -l error {0} |grep 'ATA Error Count'| cut -f2 -d:".format(d)
-        results = os.popen(command).read()
-        if "PASSED" not in status:
-            return False
         if results != '':
            return False
     else:
-        return True
+        return True, disks
 
 
 
@@ -130,35 +118,7 @@ def check_device_health():
            return False
    else:
        return True
-   if diskCount() == 2:
-       for i in range(0,2):
-           cmd = '''sudo smartctl -a -d cciss,{0} /dev/sda | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(i)
-           data = os.popen(cmd).read()
-           res = data.splitlines()
-           status = str(res)
-           command = "sudo smartctl -a -d cciss,{0}  -l error /dev/sda |grep 'ATA Error Count'| cut -f2 -d:".format(i)
-           global results
-           results = os.popen(command).read()
-           if "PASSED" not in status:
-               return False
-           if results != '':
-               return False
-       else:
-           return True
-   elif diskCount() == 4:
-       for i in range(0,4):
-           cmd = '''sudo smartctl -a -d cciss,{0} /dev/sda | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(i)
-           data = os.popen(cmd).read()
-           res = data.splitlines()
-           status = str(res)
-           command = "smartctl a -d cciss,{0} -l error /dev/sda |grep 'ATA Error Count'| cut -f2 -d:".format(i)
-           results = os.popen(command).read()
-           if "PASSED" not in status:
-               return False
-           if  results != '':
-               return False
-       else:
-           return True
+
 
 def checkRaid():
 #Check  raid and disk
@@ -190,16 +150,10 @@ def checkRaid():
         else:
             print("RAID ERROR")
             return 2
-                print('DISK failed')
-                return 2
-        else:
-            print("RAID ERROR")
-            return 0
     except:
         return "Error No such file or directory 'ssacli', Was ssacli installed?"
 
 
 
 if __name__ == '__main__':
-     sys.exit(checkRaid())
-
+    sys.exit(checkRaid())
