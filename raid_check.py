@@ -9,11 +9,8 @@ import re
 def hardwareDetected():
 # Detected hardware raid
     p1 = subprocess.Popen(shlex.split('lspci'),stdout=subprocess.PIPE)
-<<<<<<< HEAD
     p2 = subprocess.Popen(shlex.split("grep -i  'RAID bus controller: Hewlett-Packard'"), stdin=p1.stdout,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-=======
     p2 = subprocess.Popen(shlex.split('grep -i  RAID'), stdin=p1.stdout,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
->>>>>>> bcaf4d3d170df31986336cd79cd0b90b542a97f2
     p1.stdout.close()
     output = p2.communicate()
     retcode = p2.returncode
@@ -52,7 +49,6 @@ def softwareDetected():
 def find_disks():
 #Find all disk in a system
     disks = list()
-<<<<<<< HEAD
     reg = r"\b[n].{6,7}\b" #regx nmve
     list_disk = sorted(os.listdir('/sys/block'))
     a = str(list_disk)
@@ -70,7 +66,6 @@ def find_disks():
 
             except:
                 continue
-=======
     for dev in sorted(os.listdir('/sys/block')):
         try:
             with open('/sys/block/{}/device/type'.format(dev)) as f:
@@ -78,33 +73,26 @@ def find_disks():
                     disks.append('/dev/{}'.format(dev))
         except:
             continue
->>>>>>> bcaf4d3d170df31986336cd79cd0b90b542a97f2
 
     return disks
 
 
 def check_soft_disks():
-<<<<<<< HEAD
 #check dicks over smartctl
-=======
->>>>>>> bcaf4d3d170df31986336cd79cd0b90b542a97f2
     disks = find_disks()
     for d in disks:
         cmd = '''sudo smartctl -H {0} | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(d)
         data = os.popen(cmd).read()
         res = data.splitlines()
         status = str(res)
-<<<<<<< HEAD
         command = "smartctl -l error {0} | grep 'ATA Error Count'| cut -f2 -d:".format(d)
         results = os.popen(command).read()
         if "PASSED" not in status:
            return False, disks
-=======
         command = "smartctl -l error {0} |grep 'ATA Error Count'| cut -f2 -d:".format(d)
         results = os.popen(command).read()
         if "PASSED" not in status:
             return False
->>>>>>> bcaf4d3d170df31986336cd79cd0b90b542a97f2
         if results != '':
            return False
     else:
@@ -127,7 +115,6 @@ def diskCount():
 
 def check_device_health():
 # Check check_device_health hardware raid
-<<<<<<< HEAD
    count = diskCount()
    for i in range(0,count):
        cmd = '''sudo smartctl -a -d cciss,{0} /dev/sda | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(i)
@@ -143,7 +130,6 @@ def check_device_health():
            return False
    else:
        return True
-=======
     if diskCount() == 2:
        for i in range(0,2):
            cmd = '''sudo smartctl -a -d cciss,{0} /dev/sda | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(i)
@@ -174,9 +160,6 @@ def check_device_health():
          else:
              return True
 
->>>>>>> bcaf4d3d170df31986336cd79cd0b90b542a97f2
-
-
 def checkRaid():
 #Check  raid and disk
     try:
@@ -202,19 +185,16 @@ def checkRaid():
                 print("Software RAID and DISKS are OK")
                 return 0
             else:
-<<<<<<< HEAD
                 print('DISK FAILED')
                 return 2
         else:
             print("RAID ERROR")
             return 2
-=======
                 print('DISK failed')
                 return 2
         else:
             print("RAID ERROR")
             return 0
->>>>>>> bcaf4d3d170df31986336cd79cd0b90b542a97f2
     except:
         return "Error No such file or directory 'ssacli', Was ssacli installed?"
 
@@ -222,7 +202,4 @@ def checkRaid():
 
 if __name__ == '__main__':
      sys.exit(checkRaid())
-<<<<<<< HEAD
-=======
 
->>>>>>> bcaf4d3d170df31986336cd79cd0b90b542a97f2
