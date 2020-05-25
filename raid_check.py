@@ -153,10 +153,10 @@ def check_device_health():
            status = str(res)
            command = "smartctl a -d cciss,{0} -l error /dev/sda |grep 'ATA Error Count'| cut -f2 -d:".format(i)
            results = os.popen(command).read()
-               if "PASSED" not in status:
-                   return False
-               if  results != '':
-                   return False
+           if "PASSED" not in status:
+               return False
+           if  results != '':
+               return False
        else:
            return True
 
