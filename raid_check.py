@@ -31,7 +31,7 @@ def checkSsacli():
 
 def softwareDetected():
 #Detected software raid and check it
-    global mds
+    global raid
     mds = MdStat()
     raid = mds.arrays() #Get all arrays
     disk  = [i for i in raid]
@@ -48,9 +48,8 @@ def softwareDetected():
 
 def soft_raid_status():
     mds = MdStat()
-    arrays = mds.arrays()
     status = []
-    for i in arrays:
+    for i in raid:
         components = (mds.get_stats().get('arrays').get(i).get('components'))
         config = (mds.get_stats().get('arrays').get(i).get('config'))
         result  = (i, components, config)
