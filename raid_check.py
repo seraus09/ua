@@ -14,36 +14,50 @@ def hardwareDetected():
     output = p2.communicate()
     retcode = p2.returncode
     if retcode == 0:
-       return True
+        return True
     else:
-       return False
+        return False
 
 
 def checkSsacli():
 #If ssacli run return Ok, if not error
-    try:
-        if hardwareDetected():
-           ssacli = subprocess.Popen(shlex.split('ssacli ctrl all show status'),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-           output = ssacli.communicate()
-           retcode = ssacli.returncode
-           return True
-        else:
-            return False
-    except:
+    if hardwareDetected():
+       ssacli = subprocess.Popen(shlex.split('ssacli ctrl all show status'),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+       output = ssacli.communicate()
+       retcode = ssacli.returncode
+       return True
+    else:
         return False
-
 
 def softwareDetected():
 #Detected software raid and check it
+    global mds
     mds = MdStat()
     raid = mds.arrays() #Get all arrays
-    for i in raid:
+    disk  = [i for i in raid]
+    if not disk: # if list is empty return False
+       return False
+    for i  in disk:
         if mds.config(i) == "chunks":
             continue
         elif mds.config(i) != "UU":
             return False
     else:
         return True
+
+
+def soft_raid_status():
+    mds = MdStat()
+    arrays = mds.arrays()
+    status = []
+    for i in arrays:
+        components = (mds.get_stats().get('arrays').get(i).get('components'))
+        config = (mds.get_stats().get('arrays').get(i).get('config'))
+        result  = (i, components, config)
+        status.append(result)
+    return status
+
+
 
 def find_disks():
 #Find all disk in a system
@@ -89,16 +103,13 @@ def check_soft_disks():
 
 
 def diskCount():
-    try:
 #Disk count of the hardware raid
-        run_hpacucli  = subprocess.Popen(shlex.split('ssacli ctrl slot=0 pd all show status'),stdout=subprocess.PIPE)
-        output = run_hpacucli.communicate()
-        string = str(output)
-        regex = r"\b[a-z]{10,15}\b"
-        result = re.findall(regex,string )
-        return len(result)
-    except:
-        return "No such file or directory 'ssacli', Was ssacli installed?"
+    run_hpacucli  = subprocess.Popen(shlex.split('ssacli ctrl slot=0 pd all show status'),stdout=subprocess.PIPE)
+    output = run_hpacucli.communicate()
+    string = str(output)
+    regex = r"\b[a-z]{10,15}\b"
+    result = re.findall(regex,string )
+    return len(result)
 
 
 def check_device_health():
@@ -138,23 +149,23 @@ def checkRaid():
                return 2
 
         elif softwareDetected() is None:
-            return "Software Raid not found"
+            print("Software Raid not found")
+            return 2
 
         elif softwareDetected():
             if check_soft_disks():
-                print("Software RAID and DISKS are OK")
+                print("Software RAID and DISKS are OK\n", soft_raid_status())
                 return 0
             else:
                 print('DISK FAILED')
                 return 2
         else:
-            print("SOFTWARE RAID ERROR")
+            print("SOFTWARE RAID ERROR\n", soft_raid_status())
             return 2
-    except:
-        return "Error No such file or directory 'ssacli', Was ssacli installed?"
-
+    except Exception as err:
+        print (err)
+        return 2
 
 
 if __name__ == '__main__':
     sys.exit(checkRaid())
-
