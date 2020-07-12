@@ -7,7 +7,7 @@ import shlex
 import re
 
 def hardwareDetected():
-# Detected hardware raid
+""" Functiom for detected hardware raid """
     p1 = subprocess.Popen(shlex.split('lspci'),stdout=subprocess.PIPE)
     p2 = subprocess.Popen(shlex.split("grep -i  'RAID bus controller: Hewlett-Packard'"), stdin=p1.stdout,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     p1.stdout.close()
@@ -20,9 +20,9 @@ def hardwareDetected():
 
 
 def checkSsacli():
-#If ssacli run return Ok, if not error
+"""Function for detected ssacli on the server  """
     if hardwareDetected():
-       ssacli = subprocess.Popen(shlex.split('ssacli ctrl all show status'),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+       ssacli = subprocess.Popen(shlex.split('sudo ssacli ctrl all show status'),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
        output = ssacli.communicate()
        retcode = ssacli.returncode
        return True
@@ -30,10 +30,10 @@ def checkSsacli():
         return False
 
 def softwareDetected():
-#Detected software raid and check it
-    global raid
+"""Detected software raid and check it"""
+    global mds
     mds = MdStat()
-    raid = mds.arrays() #Get all arrays
+    raid = mds.arrays() # Get all arrays
     disk  = [i for i in raid]
     if not disk: # if list is empty return False
        return False
@@ -47,9 +47,11 @@ def softwareDetected():
 
 
 def soft_raid_status():
+"""Function for check status a software raid"""
     mds = MdStat()
+    arrays = mds.arrays()
     status = []
-    for i in raid:
+    for i in arrays:
         components = (mds.get_stats().get('arrays').get(i).get('components'))
         config = (mds.get_stats().get('arrays').get(i).get('config'))
         result  = (i, components, config)
@@ -59,7 +61,7 @@ def soft_raid_status():
 
 
 def find_disks():
-#Find all disk in a system
+"""Function for find all disks in the system (only software raid )"""
     disks = list()
     reg = r"\b[n].{6,7}\b" #regx nmve
     list_disk = sorted(os.listdir('/sys/block'))
@@ -83,14 +85,14 @@ def find_disks():
 
 
 def check_soft_disks():
-#check dicks over smartctl
+"""check the dicks over smartctl"""
     disks = find_disks()
     for d in disks:
         cmd = '''sudo smartctl -H {0} | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(d)
         data = os.popen(cmd).read()
         res = data.splitlines()
         status = str(res)
-        command = "smartctl -l error {0} | grep 'ATA Error Count'| cut -f2 -d:".format(d)
+        command = "sudo smartctl -l error {0} | grep 'ATA Error Count'| cut -f2 -d:".format(d)
         results = os.popen(command).read()
         if "PASSED" not in status:
            return False, disks
@@ -102,8 +104,8 @@ def check_soft_disks():
 
 
 def diskCount():
-#Disk count of the hardware raid
-    run_hpacucli  = subprocess.Popen(shlex.split('ssacli ctrl slot=0 pd all show status'),stdout=subprocess.PIPE)
+"""Function for detected disk count of the hardware raid"""
+    run_hpacucli  = subprocess.Popen(shlex.split('sudo ssacli ctrl slot=0 pd all show status'),stdout=subprocess.PIPE)
     output = run_hpacucli.communicate()
     string = str(output)
     regex = r"\b[a-z]{10,15}\b"
@@ -112,7 +114,7 @@ def diskCount():
 
 
 def check_device_health():
-# Check check_device_health hardware raid
+"""Check check_device_health hardware raid"""
    count = diskCount()
    for i in range(0,count):
        cmd = '''sudo smartctl -a -d cciss,{0} /dev/sda | grep "SMART overall-health self-assessment test result:"| cut -f2 -d:'''.format(i)
@@ -131,10 +133,10 @@ def check_device_health():
 
 
 def checkRaid():
-#Check  raid and disk
+"""Check raid and disks"""
     try:
         if checkSsacli():
-           run_hpacucli  = subprocess.Popen(shlex.split('ssacli ctrl slot=0 pd all show status'),stdout=subprocess.PIPE)
+           run_hpacucli  = subprocess.Popen(shlex.split('sudo ssacli ctrl slot=0 pd all show status'),stdout=subprocess.PIPE)
            output = run_hpacucli.communicate()
            result = str(output).replace('None', '').replace('b', '').strip('()')
            if "Fail" in result:
